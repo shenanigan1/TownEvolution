@@ -10,6 +10,11 @@ public class TerrainShaderHandler
     private TerrainGenerationParams m_generationParameters;
     private ISquareColorStrategy m_colorStrategie;
 
+    private enum ECaseType
+    {
+        Water, Sand, Dirt, Rock, Selection
+    }
+
     public TerrainShaderHandler(int gridSize, TerrainGenerationParams parameters, ISquareColorStrategy colorStrategie) 
     {
         m_colorStrategie = colorStrategie;
@@ -28,19 +33,19 @@ public class TerrainShaderHandler
 
         if(noise >= m_generationParameters.rockLevel) 
         {
-            m_colorStrategie.ChangeColor((int)position.x, (int)position.y, 3);
+            m_colorStrategie.ChangeColor((int)position.x, (int)position.y, (int)ECaseType.Rock);
         }
         else if(noise >= m_generationParameters.dirtLevel)
         {
-            m_colorStrategie.ChangeColor((int)position.x, (int)position.y, 2);
+            m_colorStrategie.ChangeColor((int)position.x, (int)position.y, (int)ECaseType.Dirt);
         }
         else if(noise >= m_generationParameters.sandLevel) 
         {
-            m_colorStrategie.ChangeColor((int)position.x, (int)position.y, 1);
+            m_colorStrategie.ChangeColor((int)position.x, (int)position.y, (int)ECaseType.Sand);
         }
         else
         {
-            m_colorStrategie.ChangeColor((int)position.x, (int)position.y, 0);
+            m_colorStrategie.ChangeColor((int)position.x, (int)position.y, (int)ECaseType.Water);
         }
     }
 }
