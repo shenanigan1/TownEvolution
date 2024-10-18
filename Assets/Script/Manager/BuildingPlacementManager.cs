@@ -108,23 +108,27 @@ public class BuildingPlacementManager : MonoBehaviour
         m_currentBuilding = building;
         _previewRenderer.sprite = building.buildingPrefab.GetComponent<SpriteRenderer>().sprite;
         m_placeBuilding = true;
+        ConstructionMenuManager.Instance.InConstructionMode.Invoke(true);
     }
 
-    public void StopPlaceBuilding()
+    public void StopBuilding()
     {
         StopDestructionMode();
         _preview.SetActive(false);
         m_placeBuilding = false;
+        ConstructionMenuManager.Instance.InConstructionMode.Invoke(false);
     }
 
     public void StartDestructionMode()
     {
-        StopPlaceBuilding();
+        StopBuilding();
         m_destroyBuilding = true;
+        ConstructionMenuManager.Instance.InConstructionMode.Invoke(true);
     }
 
     public void StopDestructionMode()
     {
         m_destroyBuilding = false;
+        ConstructionMenuManager.Instance.InConstructionMode.Invoke(false);
     }
 }
