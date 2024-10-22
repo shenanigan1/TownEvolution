@@ -17,4 +17,5 @@ MonoBehaviour:
   waterConsumption: 0
   buildingPrefab: {fileID: 410840788400333606, guid: 829ad05c48636804f9169471f57f73d0, type: 3}
   building: {fileID: 0}
-  energy: 20
+  m_energy: 20
+  m_effectRadius: 5

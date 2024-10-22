@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 
-// Classe principale qui gère le maillage
 [RequireComponent(typeof(MeshFilter))]
 public class Chunk : MonoBehaviour
 {
