@@ -31,6 +31,7 @@ public class BaseRessource : IRessource
 public class People : BaseRessource
 {
     private int nbrOfPeople;
+    private int m_attraction;
     public override void Add(int value)
     {
         base.Add(value);

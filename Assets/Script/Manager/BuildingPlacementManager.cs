@@ -5,7 +5,6 @@ public class BuildingPlacementManager : MonoBehaviour
 {
     private bool m_placeBuilding = false;
     private bool m_destroyBuilding = false;
-    private Dictionary<(int,int), Building> m_buildings = new Dictionary<(int,int), Building>();
     [SerializeField]private Building m_currentBuilding;
 
     [SerializeField] private GameObject _preview;
@@ -35,14 +34,15 @@ public class BuildingPlacementManager : MonoBehaviour
 
         if (position != null)
         {
+            Vector2Int notNullPosition = new Vector2Int(position.Value.x, position.Value.y);
             _preview.transform.position = new Vector3(position.Value.x * 10, 0, position.Value.y * 10);
 
-            if (!IsOccupied(position.Value.x, position.Value.y))
+            if (!IsOccupied(notNullPosition))
                 return;
 
             if (Input.GetKeyDown(KeyCode.W))
             {
-                m_buildings[(position.Value.x, position.Value.y)].Destroy();
+                GridManager.Instance.GetBuilding(new Vector2Int(position.Value.x, position.Value.y)).Destroy();
             }
         }
     }
@@ -53,22 +53,22 @@ public class BuildingPlacementManager : MonoBehaviour
 
         if (position != null)
         {
-
+            Vector2Int notNullPosition = new Vector2Int(position.Value.x, position.Value.y);
             _preview.transform.position = new Vector3(position.Value.x * 10, 0, position.Value.y * 10);
 
-            if (!CanPlaceNChangePreviewColor(position.Value.x, position.Value.y, m_currentBuilding.price))
+            if (!CanPlaceNChangePreviewColor(notNullPosition, m_currentBuilding.price))
                  return;
 
             if(Input.GetKeyDown(KeyCode.W))
             {
-                CreateBuilding(position.Value.x, position.Value.y);
+                CreateBuilding(notNullPosition);
             }
         }
     }
 
-    private bool CanPlaceNChangePreviewColor(int x, int y, int price)
+    private bool CanPlaceNChangePreviewColor(Vector2Int position, int price)
     {
-        if (IsOccupied(x, y) || !CanBuy(price))
+        if (IsOccupied(position) || !CanBuy(price))
         {
             if (_previewRenderer.color == Color.green)
                 _previewRenderer.color = Color.red;
@@ -81,13 +81,9 @@ public class BuildingPlacementManager : MonoBehaviour
         return true;
     }
 
-    private bool IsOccupied(int x, int y)
+    private bool IsOccupied(Vector2Int position)
     {
-        if(m_buildings.ContainsKey((x,y)))
-        {
-            return m_buildings[(x, y)] != null;
-        }
-        return false;
+        return GridManager.Instance.GetBuilding(position) != null;
     }
 
     private bool CanBuy(int price)
@@ -95,10 +91,11 @@ public class BuildingPlacementManager : MonoBehaviour
         return price <= RessourcesManager.Instance.GetRessources<Gold>().quantity;
     }
 
-    private void CreateBuilding(int x, int y)
+    private void CreateBuilding(Vector2Int position)
     {
-        m_buildings[(x,y)] = Instantiate(m_currentBuilding);
-        m_buildings[(x, y)].Place(new Vector3(x * 10, 0, y * 10));
+        Building building = Instantiate(m_currentBuilding);
+        GridManager.Instance.SetBuilding(building, position);
+        building.Place(position);
     }
 
     public void StartPlacingBuilding(Building building)
