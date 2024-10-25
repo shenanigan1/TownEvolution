@@ -1,8 +1,9 @@
-using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "Central", menuName = "MyGame/Buildings/Central")]
-public class Central :RessourceBuilding<Energy>
+[CreateAssetMenu(fileName = "WaterTank", menuName = "MyGame/Buildings/WaterTank")]
+public class WaterTank : RessourceBuilding<Water>
 {
     public override void Place(Vector2Int position)
     {
@@ -12,11 +13,4 @@ public class Central :RessourceBuilding<Energy>
         if (!consume)
             building.GetComponent<SpriteRenderer>().color = Color.yellow;
     }
-}
-
-public interface IZoneEffect
-{
-    int energy { get; set; }
-    int effectRadius { get; set; }
-    Type ressource { get; set; }
 }
