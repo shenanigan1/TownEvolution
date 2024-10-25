@@ -1,4 +1,5 @@
- using System.Collections;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -7,6 +8,7 @@ public class GridManager : MonoBehaviour
 {
     public static GridManager Instance;
     private Dictionary<Vector2Int, GridCell> m_cells = new Dictionary<Vector2Int, GridCell>();
+    public GameObject test;
 
     private void Awake()
     {
@@ -26,57 +28,62 @@ public class GridManager : MonoBehaviour
         return m_cells.ContainsKey(position) ? m_cells[position].building : null;
     }
 
-    private void SetEnergyOnCell(Vector2Int position, IGiveEnergy energy)
+    private void SetRessourceOnCell<T>(Vector2Int position, IZoneEffect zone)where T : IRessource
     {
         CheckExistance(position);
 
-        if (m_cells[position].building is House house)
-        {
-            house.StartConsume<Energy>();
-        }
+        if (!m_cells[position].ressourceProvider.ContainsKey(typeof(T)))
+            m_cells[position].ressourceProvider[zone.ressource] = new List<IZoneEffect>();
 
-        m_cells[position].provideEnergy.Add(energy);
+        m_cells[position].ressourceProvider[zone.ressource].Add(zone);
+
+        if (m_cells[position].building)
+        {
+            m_cells[position].building.StartConsume<T>();
+        }
     }
 
 
-    private void RemoveEnergyOnCell(Vector2Int position, IGiveEnergy energy)
+    private void RemoveRessourceOnCell<T>(Vector2Int position, IZoneEffect zone) where T : IRessource
     {
         CheckExistance(position);
-        m_cells[position].provideEnergy.Remove(energy);
-        if (m_cells[position].provideEnergy.Count == 0)
+        m_cells[position].ressourceProvider[zone.ressource].Remove(zone);
+        if (m_cells[position].ressourceProvider[zone.ressource].Count == 0)
         {
             if (m_cells[position].building is House house)
             {
-                house.StopConsume<Energy>();
+                house.StopConsume<T>();
             }
         }
     }
 
-    public void SetEnergyProvider(Vector2Int position, IGiveEnergy energy)
+    public void SetRessourceProvider<T>(Vector2Int position, IZoneEffect zone)where T : IRessource
     {
-        for(int i = position.x - energy.effectRadius; i < position.x + energy.effectRadius; i++)
+        for(int i = position.x - zone.effectRadius; i <= position.x + zone.effectRadius; i++)
         {
-            for (int j = position.y - energy.effectRadius; j < position.y + energy.effectRadius; j++) 
+            for (int j = position.y - zone.effectRadius; j <= position.y + zone.effectRadius; j++) 
             {
                 if(j>= 0  && i >= 0 && i < ChunckManager.Instance.GetGridSize && j < ChunckManager.Instance.GetGridSize)
                 {
                     Vector2Int pos = new Vector2Int(i, j);
-                    SetEnergyOnCell(pos, energy);
+                    SetRessourceOnCell<T>(pos, zone);
+                    Instantiate(test, new Vector3(pos.x*10, 2, pos.y*10), Quaternion.identity);
+
                 }
             }
         }
     }
 
-    public void RemoveEnergyProvider(Vector2Int position, IGiveEnergy energy)
+    public void RemoveRessourceProvider<T>(Vector2Int position, IZoneEffect zone) where T : IRessource
     {
-        for (int i = position.x - energy.effectRadius; i < position.x + energy.effectRadius; i++)
+        for (int i = position.x - zone.effectRadius; i < position.x + zone.effectRadius; i++)
         {
-            for (int j = position.y - energy.effectRadius; j < position.y + energy.effectRadius; j++)
+            for (int j = position.y - zone.effectRadius; j < position.y + zone.effectRadius; j++)
             {
                 if (j >= 0 && i >= 0 && i < ChunckManager.Instance.GetGridSize && j < ChunckManager.Instance.GetGridSize)
                 {
                     Vector2Int pos = new Vector2Int(i, j);
-                    RemoveEnergyOnCell(pos, energy);
+                    RemoveRessourceOnCell<T>(pos, zone);
                 }
             }
         }
@@ -90,9 +97,17 @@ public class GridManager : MonoBehaviour
         m_cells[position] = new GridCell();
     }
 
-    public bool IsCaseHaveAccessToEnergy(Vector2Int position) 
+    public bool IsCaseHaveAccessToRessource(Vector2Int position, List<Type> ressources)
     {
-        return m_cells[position].provideEnergy.Count > 0;
+        for(int i = 0; i < ressources.Count; i++)
+        {
+            if (!m_cells[position].ressourceProvider.ContainsKey(ressources[i]))
+            { return false; }
+
+            if(m_cells[position].ressourceProvider[ressources[i]].Count == 0)
+                return false;
+        }
+        return true;
     }
 
 }
@@ -100,14 +115,12 @@ public class GridManager : MonoBehaviour
 public class GridCell
 {
     public Building building { get; set; }
-    public List<IGiveEnergy> provideEnergy { get; set; }
-    public List<IGiveWater> provideWater { get; set; }
+    public Dictionary<Type, List<IZoneEffect>> ressourceProvider { get; set; }
 
     public GridCell()
     {
         building = null;
-        provideEnergy = new List<IGiveEnergy>();
-        provideWater = new List<IGiveWater>();
-    }
+        ressourceProvider = new Dictionary<Type, List<IZoneEffect>>();
+    } 
 
 }

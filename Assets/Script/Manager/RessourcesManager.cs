@@ -16,6 +16,7 @@ public class RessourcesManager
         this.RegisterRessource(new People());
         this.RegisterRessource(new Water());
         this.RegisterRessource(new Energy());
+        this.RegisterRessource(new RoadAccess());
     }
 
     public void RegisterRessource<T>(T ressource) where T : IRessource

@@ -1,31 +1,24 @@
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "House", menuName = "MyGame/Buildings/House")]
-public class House : Building
+public class House : BaseBuilding
 {
     public int habitant = 10;
-    public bool consume = false;
-
-    public override void Destroy()
-    {
-        Destroy(building);
-        RemoveEffect();
-        Destroy(this);
-    }
 
     public override void Place(Vector2Int position)
     {
-        building = Instantiate(buildingPrefab, new Vector3(position.x * 10, 0, position.y * 10), buildingPrefab.transform.rotation);
-        m_gridPosition = position;
-        building.GetComponent<SpriteRenderer>().color = Color.yellow;
-        Effect();
+        neededRessources.Add(typeof(Energy));
+        neededRessources.Add(typeof(RoadAccess));
+        base.Place(position);
+        if(!consume)
+            building.GetComponent<SpriteRenderer>().color = Color.yellow;
     }
 
     protected override void Effect()
     {
         RessourcesManager.Instance.RemoveRessources<Gold>(price);
         RessourcesManager.Instance.AddRessources<People>(habitant);
-        if (GridManager.Instance.IsCaseHaveAccessToEnergy(m_gridPosition))
+        if (GridManager.Instance.IsCaseHaveAccessToRessource(m_gridPosition, neededRessources))
             StartConsume<Energy>();
 
     }
@@ -37,23 +30,15 @@ public class House : Building
         StopConsume<Energy>();
     }
 
-    public void StartConsume<T>() where T : AutoConsume
+    public override void StartConsume<T>()
     {
-        if (consume)
-            return;
-        building.GetComponent<SpriteRenderer>().color = Color.white;
-        Debug.Log("Start Consume");
-        consume = true;
+        base.StartConsume<T>();
         RessourcesManager.Instance.GetRessources<Energy>().consuption += energyConsumption;
     }
 
-    public void StopConsume<T>() where T : AutoConsume
+    public override void StopConsume<T>()
     {
-        if (!consume)
-            return;
-        building.GetComponent<SpriteRenderer>().color = Color.yellow;  
-        Debug.Log("End Consume");
-        consume = false;
+        base.StopConsume<T>();
         RessourcesManager.Instance.GetRessources<Energy>().consuption -= energyConsumption;
     }
 }

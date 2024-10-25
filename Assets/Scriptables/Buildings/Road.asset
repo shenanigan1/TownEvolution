@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dfd8551bfe9231c499c20611f255d27c, type: 3}
+  m_Name: Road
+  m_EditorClassIdentifier: 
+  price: 1
+  energyConsumption: 0
+  waterConsumption: 0
+  buildingPrefab: {fileID: 410840788400333606, guid: 852cf498c2deb424c9772f0fa07c2d8c, type: 3}
+  building: {fileID: 0}
+  consume: 0
+  m_energy: 0
+  m_effectRadius: 2
