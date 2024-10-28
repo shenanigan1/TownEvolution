@@ -10,6 +10,7 @@ public class ConstructionMenuManager : MonoBehaviour
     [SerializeField] private GameObject m_stopBuilding;
     public UnityEvent<bool> InConstructionMode = new UnityEvent<bool>();
     public static ConstructionMenuManager Instance;
+    public GameObject MenuHolder;
 
     private bool m_construction = false;
     private bool m_isOpen = false;
@@ -42,6 +43,11 @@ public class ConstructionMenuManager : MonoBehaviour
 
         m_openCloseBtn.SetActive(!m_construction);
         m_stopBuilding.SetActive(m_construction);
+    }
+
+    public void Next(ChangeMenu changeMenu)
+    {
+        changeMenu.DoChangeMenu();
     }
 
 }
