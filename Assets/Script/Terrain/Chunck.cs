@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter))]
@@ -27,7 +28,7 @@ public class Chunk : MonoBehaviour
     }
 
     private MeshFilter meshFilter;
-    private SquareColorStrategy colorStrategy;
+    private SquareColorStrategy m_colorStrategy;
     private Vector3Int lastChange = new Vector3Int(-1, -1, -1);
 
     RessourcesManager manager = new RessourcesManager();
@@ -39,8 +40,9 @@ public class Chunk : MonoBehaviour
 
         meshFilter = GetComponent<MeshFilter>();
         InitializeMesh();
-        colorStrategy = new SquareColorStrategy(meshFilter, m_gridSize, m_cellSize);
-        m_terrainGenerator =  new TerrainShaderHandler(m_gridSize, m_generationParameter, colorStrategy);
+        m_colorStrategy = new SquareColorStrategy(meshFilter, m_gridSize, m_cellSize);
+        Gameloop.Instance.SetColorStrategie(m_colorStrategy);
+        m_terrainGenerator =  new TerrainShaderHandler(m_gridSize, m_generationParameter, m_colorStrategy);
         //m_placement.PlaceObject(m_gridSize, m_cellSize);
 
         ////////////// To Delete ///////////
@@ -55,14 +57,19 @@ public class Chunk : MonoBehaviour
         GetComponent<MeshCollider>().sharedMesh = mesh;
     }
 
+    public void ChangeTile(Vector2 position, ECaseType type)
+    {
+        m_colorStrategy.ChangeColor((int)position.x, (int)position.y, (int)type);
+    }
+
     private void Update()
     {
 
         //////////////////// To Delete ///////////////
-        MouseInputHandler.ProcessMouseInput(colorStrategy, ref lastChange, m_gridSize);
+        //MouseInputHandler.ProcessMouseInput(m_colorStrategy, ref lastChange, m_gridSize);
         if (Input.GetKey(KeyCode.R))
         {
-            m_terrainGenerator = new TerrainShaderHandler(m_gridSize, m_generationParameter, colorStrategy);
+            m_terrainGenerator = new TerrainShaderHandler(m_gridSize, m_generationParameter, m_colorStrategy);
         }
 
         if (Input.GetKey(KeyCode.C))
@@ -71,54 +78,6 @@ public class Chunk : MonoBehaviour
             RessourcesManager.Instance.AddRessources<People>(10);
         }
         //////////////////////////////////////////////
-    }
-}
-
-/// <summary>
-/// To Change
-/// </summary>
-
-// Class For the handle of mouse input
-public static class MouseInputHandler
-{
-    public static void ProcessMouseInput(SquareColorStrategy colorStrategy, ref Vector3Int lastChange, int gridSize)
-    {
-        ResetLastChange(colorStrategy, ref lastChange);
-
-        if (Cursor.lockState == CursorLockMode.Locked)
-        {
-
-            return;
-        }
-
-        Vector2Int? position = GridPositionUtility.GetGridPosition(Input.mousePosition);
-
-
-        if (position != null)
-        {
-            position = new Vector2Int(position.Value.y, position.Value.x);
-            if (IsValidSquareIndex(position.Value.x, position.Value.y, colorStrategy))
-            {
-                if (lastChange.x != position.Value.x || lastChange.y != position.Value.y)
-                {
-                    lastChange.Set(position.Value.x, position.Value.y, colorStrategy.GetSubmeshOfSquare(position.Value.x,position.Value.y, gridSize));
-                    colorStrategy.ChangeColor(position.Value.x, position.Value.y,4);
-                }
-            }
-        }
-    }
-
-    private static void ResetLastChange(ISquareColorStrategy colorStrategy, ref Vector3Int lastChange)
-    {
-        if (lastChange.x < 0)
-            return;
-
-        colorStrategy.ChangeColor(lastChange.x, lastChange.y, lastChange.z);
-        lastChange.Set(-1, -1, -1);
-    }
-    private static bool IsValidSquareIndex(int x, int y, ISquareColorStrategy colorStrategy)
-    {
-        return x >= 0 && x < colorStrategy.GridSize && y >= 0 && y < colorStrategy.GridSize;
     }
 }
 

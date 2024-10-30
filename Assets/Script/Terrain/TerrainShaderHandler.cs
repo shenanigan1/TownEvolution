@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using static Chunk;
 
@@ -9,11 +10,6 @@ public class TerrainShaderHandler
 {
     private TerrainGenerationParams m_generationParameters;
     private ISquareColorStrategy m_colorStrategie;
-
-    private enum ECaseType
-    {
-        Water, Sand, Dirt, Rock, Selection
-    }
 
     public TerrainShaderHandler(int gridSize, TerrainGenerationParams parameters, ISquareColorStrategy colorStrategie) 
     {
@@ -33,19 +29,30 @@ public class TerrainShaderHandler
 
         if(noise >= m_generationParameters.rockLevel) 
         {
-            m_colorStrategie.ChangeColor((int)position.x, (int)position.y, (int)ECaseType.Rock);
+            SetTile(position, ECaseType.Rock);
         }
         else if(noise >= m_generationParameters.dirtLevel)
         {
-            m_colorStrategie.ChangeColor((int)position.x, (int)position.y, (int)ECaseType.Dirt);
+            SetTile(position, ECaseType.Dirt);
         }
         else if(noise >= m_generationParameters.sandLevel) 
         {
-            m_colorStrategie.ChangeColor((int)position.x, (int)position.y, (int)ECaseType.Sand);
+            SetTile(position, ECaseType.Sand);
         }
         else
         {
-            m_colorStrategie.ChangeColor((int)position.x, (int)position.y, (int)ECaseType.Water);
+            SetTile(position, ECaseType.Water);
         }
     }
+
+    public void SetTile(Vector2 position, ECaseType type)
+    {
+        m_colorStrategie.ChangeColor((int)position.x, (int)position.y, (int)type);
+    }
+}
+
+[Serializable]
+public enum ECaseType
+{
+    Water, Sand, Dirt, Rock, Selection, BadSelection
 }

@@ -20,6 +20,9 @@ public class SquareColorStrategy : ISquareColorStrategy
     public void ChangeColor(int x, int y, int targetSubmesh)
     {
         MoveSquareToSubmesh(x, y, targetSubmesh);
+        if ((ECaseType)targetSubmesh == ECaseType.Selection || (ECaseType)targetSubmesh == ECaseType.BadSelection)
+            return;
+        GridManager.Instance.SetTile(new Vector2Int(x,y), targetSubmesh);
     }
 
     // Set submesh and UVs

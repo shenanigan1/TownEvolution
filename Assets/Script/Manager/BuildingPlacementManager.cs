@@ -1,22 +1,34 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 
 public class BuildingPlacementManager : MonoBehaviour
 {
     private bool m_placeBuilding = false;
     private bool m_destroyBuilding = false;
-    [SerializeField]private Building m_currentBuilding;
+    private bool m_isbuilding = false;
+    private Building m_currentBuilding;
+    private ECaseType m_type;
+    private Selection m_selection;
+    private GameObject _preview;
+    private SpriteRenderer _previewRenderer;
+    private Chunk m_chunk;
 
-    [SerializeField] private GameObject _preview;
-    [SerializeField] private SpriteRenderer _previewRenderer;
-    // Start is called before the first frame update
-    void Start()
+    private bool m_rightClic;
+
+    public void Init(BuildingPlacementParams parameter) 
     {
+        _preview = parameter.preview;
+        m_chunk = parameter.chunk;
+        m_selection = parameter.selection;
+
         _previewRenderer = _preview.GetComponent<SpriteRenderer>();
+        InputManager.Instance.LeftMouseBtnPressed.AddListener(IsRightClic);
     }
 
     // Update is called once per frame
-    void Update()
+    public void Update()
     {
         if (m_placeBuilding)
         {
@@ -26,6 +38,7 @@ public class BuildingPlacementManager : MonoBehaviour
         {
             DestroyBuilding();
         }
+
     }
 
     private void DestroyBuilding()
@@ -40,7 +53,7 @@ public class BuildingPlacementManager : MonoBehaviour
             if (!IsOccupied(notNullPosition))
                 return;
 
-            if (Input.GetKeyDown(KeyCode.W))
+            if (m_rightClic)
             {
                 GridManager.Instance.GetBuilding(new Vector2Int(position.Value.x, position.Value.y)).Destroy();
             }
@@ -59,24 +72,46 @@ public class BuildingPlacementManager : MonoBehaviour
             if (!CanPlaceNChangePreviewColor(notNullPosition, m_currentBuilding.price))
                  return;
 
-            if(Input.GetKeyDown(KeyCode.W))
+            if(m_rightClic)
             {
-                CreateBuilding(notNullPosition);
+                if(m_isbuilding)
+                {
+                    CreateBuilding(notNullPosition);
+                    return;
+                }
+                PlaceTile(notNullPosition, m_type);
+                    
             }
         }
+    }
+
+    private void PlaceTile(Vector2Int position, ECaseType type)
+    {
+        if(GridManager.Instance.GetTileType(new Vector2Int(position.y, position.x)) == (int)type)
+            return;
+
+        RessourcesManager.Instance.RemoveRessources<Gold>(m_currentBuilding.price);
+        m_chunk.ChangeTile(new Vector2(position.y, position.x), type);
     }
 
     private bool CanPlaceNChangePreviewColor(Vector2Int position, int price)
     {
         if (IsOccupied(position) || !CanBuy(price))
         {
-            if (_previewRenderer.color == Color.green)
+            if (_previewRenderer.color != Color.red || m_selection.GetIsGood())
+            {
                 _previewRenderer.color = Color.red;
+                m_selection.SetIsGood(false);
+                m_chunk.ChangeTile(new Vector2Int(position.y, position.x), ECaseType.BadSelection);
+            }
+
             return false;
         }
-        else if (_previewRenderer.color == Color.red)
+        else if (_previewRenderer.color != Color.green || !m_selection.GetIsGood())
         {
             _previewRenderer.color = Color.green;
+            m_selection.SetIsGood(true);
+            m_chunk.ChangeTile(new Vector2Int(position.y, position.x), ECaseType.Selection);
         }
         return true;
     }
@@ -103,8 +138,20 @@ public class BuildingPlacementManager : MonoBehaviour
         StopDestructionMode();
         _preview.SetActive(true);
         m_currentBuilding = building;
+        m_isbuilding = true;
         _previewRenderer.sprite = building.buildingPrefab.GetComponent<SpriteRenderer>().sprite;
         m_placeBuilding = true;
+        ConstructionMenuManager.Instance.InConstructionMode.Invoke(true);
+    }
+
+    public void StartPlacingTile(TileChange tile)
+    {
+        StopDestructionMode();
+        m_type = tile.type;
+        m_isbuilding = false;
+        m_placeBuilding = true;
+        m_currentBuilding = tile.building;
+        _preview.SetActive(false);
         ConstructionMenuManager.Instance.InConstructionMode.Invoke(true);
     }
 
@@ -113,6 +160,7 @@ public class BuildingPlacementManager : MonoBehaviour
         StopDestructionMode();
         _preview.SetActive(false);
         m_placeBuilding = false;
+        m_selection.SetIsGood(true);
         ConstructionMenuManager.Instance.InConstructionMode.Invoke(false);
     }
 
@@ -128,4 +176,17 @@ public class BuildingPlacementManager : MonoBehaviour
         m_destroyBuilding = false;
         ConstructionMenuManager.Instance.InConstructionMode.Invoke(false);
     }
+
+    private void IsRightClic(bool place)
+    {
+        m_rightClic = place;
+    }
+}
+
+[Serializable]
+public struct BuildingPlacementParams
+{
+    public GameObject preview;
+    public Chunk chunk;
+    public Selection selection;
 }
