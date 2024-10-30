@@ -110,10 +110,21 @@ public class GridManager : MonoBehaviour
         return true;
     }
 
+    public void SetTile(Vector2Int position, int type)
+    {
+        CheckExistance(position);
+        m_cells[position].type = type;
+    }
+
+    public int GetTileType(Vector2Int position) 
+    {
+        return m_cells[position].type;
+    }
 }
 
 public class GridCell
 {
+    public int type;
     public Building building { get; set; }
     public Dictionary<Type, List<IZoneEffect>> ressourceProvider { get; set; }
 
@@ -122,5 +133,4 @@ public class GridCell
         building = null;
         ressourceProvider = new Dictionary<Type, List<IZoneEffect>>();
     } 
-
 }

@@ -12,6 +12,7 @@ public class ConstructionMenuManager : MonoBehaviour
     public static ConstructionMenuManager Instance;
     public GameObject MenuHolder;
 
+    private BuildingPlacementManager m_PlacementManager;
     private bool m_construction = false;
     private bool m_isOpen = false;
 
@@ -50,4 +51,32 @@ public class ConstructionMenuManager : MonoBehaviour
         changeMenu.DoChangeMenu();
     }
 
+    public void StartPlacingBuilding(Building building)
+    {
+        m_PlacementManager.StartPlacingBuilding(building);
+    }
+
+    public void StartPlacingTile(TileChange tile)
+    {
+        m_PlacementManager.StartPlacingTile(tile);
+    }
+
+    public void StopBuilding()
+    {
+        m_PlacementManager.StopBuilding();
+    }
+
+    public void StartDestructionMode()
+    {
+        m_PlacementManager.StartDestructionMode();
+    }
+
+    public void StopDestructionMode()
+    {
+        m_PlacementManager.StopDestructionMode();
+    }
+    public void SetPlacementManager(BuildingPlacementManager manager)
+    {
+        m_PlacementManager = manager;
+    }
 }
