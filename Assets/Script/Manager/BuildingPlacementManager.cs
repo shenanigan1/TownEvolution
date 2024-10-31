@@ -30,6 +30,8 @@ public class BuildingPlacementManager : MonoBehaviour
     // Update is called once per frame
     public void Update()
     {
+        if (Cursor.lockState == CursorLockMode.Locked)
+            return;
         if (m_placeBuilding)
         {
             PlaceBuildingOnMousePosOnMap();
