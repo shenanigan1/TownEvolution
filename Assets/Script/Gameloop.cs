@@ -10,6 +10,7 @@ public class Gameloop : MonoBehaviour
     private Selection m_selection;
     [SerializeField] private BuildingPlacementParams m_buildingPlacementParams;
     private BuildingPlacementManager m_buildingPlacementManager;
+    private ChunckManager m_chunckManager;
 
     private void Awake()
     {
@@ -28,12 +29,12 @@ public class Gameloop : MonoBehaviour
     private void Start()
     {
         ConstructionMenuManager.Instance.SetPlacementManager(m_buildingPlacementManager);
+        m_chunckManager = ChunckManager.Instance;
     }
 
     void Update()
     {
-        MouseInputHandler.ProcessMouseInput(m_colorStrategy, ref lastChange, ChunckManager.Instance.GetGridSize, m_selection.GetSelectionTile());
-        m_buildingPlacementManager.Update();
+        MouseInputHandler.ProcessMouseInput(m_colorStrategy, ref lastChange, m_chunckManager.GetGridSize, m_selection.GetSelectionTile());
     }
 
     public void SetColorStrategie(SquareColorStrategy strategy)

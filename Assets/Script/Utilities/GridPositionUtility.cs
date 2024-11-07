@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class GridPositionUtility
 {
@@ -7,7 +8,7 @@ public class GridPositionUtility
         Ray ray = Camera.main.ScreenPointToRay(position);
 
         if (Physics.Raycast(ray, out RaycastHit hit))
-        {
+        { 
             Vector3 localHitPoint = hit.transform.InverseTransformPoint(hit.point);
             int x = Mathf.FloorToInt(localHitPoint.z / ChunckManager.Instance.GetCellSize);
             int y = Mathf.FloorToInt(localHitPoint.x / ChunckManager.Instance.GetCellSize);

@@ -28,6 +28,15 @@ public class BaseRessource : IRessource
     }
 }
 
+public class Happiness : BaseRessource { }
+public class Impot : BaseRessource
+{
+    public override void Add(int value)
+    {
+        quantity = value;
+    }
+}
+
 public class People : BaseRessource
 {
     private int nbrOfPeople;

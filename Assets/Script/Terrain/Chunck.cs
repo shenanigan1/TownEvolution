@@ -29,7 +29,6 @@ public class Chunk : MonoBehaviour
 
     private MeshFilter meshFilter;
     private SquareColorStrategy m_colorStrategy;
-    private Vector3Int lastChange = new Vector3Int(-1, -1, -1);
 
     RessourcesManager manager = new RessourcesManager();
 
@@ -44,10 +43,6 @@ public class Chunk : MonoBehaviour
         Gameloop.Instance.SetColorStrategie(m_colorStrategy);
         m_terrainGenerator =  new TerrainShaderHandler(m_gridSize, m_generationParameter, m_colorStrategy);
         //m_placement.PlaceObject(m_gridSize, m_cellSize);
-
-        ////////////// To Delete ///////////
-        manager = new RessourcesManager();
-        /////////////////////////////////////
     }
 
     private void InitializeMesh()

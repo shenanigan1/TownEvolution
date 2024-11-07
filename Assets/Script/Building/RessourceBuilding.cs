@@ -18,13 +18,16 @@ public abstract class RessourceBuilding<T> : BaseBuilding, IZoneEffect where T :
 
     protected override void Effect()
     {
-        RessourcesManager.Instance.RemoveRessources<Gold>(price);
+        if (!GridManager.Instance.IsCaseHaveAccessToRessource(m_gridPosition, neededRessources) || haveSetEffect)
+            return;
+        haveSetEffect = true;
         RessourcesManager.Instance.AddRessources<T>(energy);
         GridManager.Instance.SetRessourceProvider<T>(m_gridPosition, this);
     }
 
     protected override void RemoveEffect()
     {
+        haveSetEffect = false;
         RessourcesManager.Instance.RemoveRessources<T>(energy);
         GridManager.Instance.RemoveRessourceProvider<T>(m_gridPosition, this);
     }

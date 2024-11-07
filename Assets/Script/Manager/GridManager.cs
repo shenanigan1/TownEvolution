@@ -1,13 +1,17 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEditor;
+using UnityEditor.Rendering.Universal.ShaderGraph;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class GridManager : MonoBehaviour
 {
     public static GridManager Instance;
     private Dictionary<Vector2Int, GridCell> m_cells = new Dictionary<Vector2Int, GridCell>();
+    private List<Building> m_buildings = new List<Building>();
     public GameObject test;
 
     private void Awake()
@@ -17,10 +21,16 @@ public class GridManager : MonoBehaviour
         else
             Destroy(this);
     }
+
+    public void RemoveBuilding(Building building)
+    {
+        m_buildings.Remove(building);
+    }
     public void SetBuilding(Building building, Vector2Int position)
     {
         CheckExistance(position);
         m_cells[position].building = building;
+        m_buildings.Add(building);
     }
 
     public Building GetBuilding(Vector2Int position) 
@@ -37,9 +47,9 @@ public class GridManager : MonoBehaviour
 
         m_cells[position].ressourceProvider[zone.ressource].Add(zone);
 
-        if (m_cells[position].building)
+        if (m_cells[position].building && !m_cells[position].building.consume && IsCaseHaveAccessToRessource(position, m_cells[position].building.neededRessources))
         {
-            m_cells[position].building.StartConsume<T>();
+            m_cells[position].building.StartConsume();
         }
     }
 
@@ -47,13 +57,13 @@ public class GridManager : MonoBehaviour
     private void RemoveRessourceOnCell<T>(Vector2Int position, IZoneEffect zone) where T : IRessource
     {
         CheckExistance(position);
+
+        if (!m_cells[position].ressourceProvider[zone.ressource].Contains(zone))
+            return;
         m_cells[position].ressourceProvider[zone.ressource].Remove(zone);
-        if (m_cells[position].ressourceProvider[zone.ressource].Count == 0)
+        if (m_cells[position].ressourceProvider[zone.ressource].Count == 0 && m_cells[position].building is Building building)
         {
-            if (m_cells[position].building is House house)
-            {
-                house.StopConsume<T>();
-            }
+            building.StopConsume();
         }
     }
 
@@ -67,7 +77,7 @@ public class GridManager : MonoBehaviour
                 {
                     Vector2Int pos = new Vector2Int(i, j);
                     SetRessourceOnCell<T>(pos, zone);
-                    Instantiate(test, new Vector3(pos.x*10, 2, pos.y*10), Quaternion.identity);
+                    Instantiate(test, new Vector3(pos.x*10, 2, pos.y*10), Quaternion.identity, m_cells[position].building.building.gameObject.transform);
 
                 }
             }
@@ -76,9 +86,9 @@ public class GridManager : MonoBehaviour
 
     public void RemoveRessourceProvider<T>(Vector2Int position, IZoneEffect zone) where T : IRessource
     {
-        for (int i = position.x - zone.effectRadius; i < position.x + zone.effectRadius; i++)
+        for (int i = position.x - zone.effectRadius; i <= position.x + zone.effectRadius; i++)
         {
-            for (int j = position.y - zone.effectRadius; j < position.y + zone.effectRadius; j++)
+            for (int j = position.y - zone.effectRadius; j <= position.y + zone.effectRadius; j++)
             {
                 if (j >= 0 && i >= 0 && i < ChunckManager.Instance.GetGridSize && j < ChunckManager.Instance.GetGridSize)
                 {
@@ -101,11 +111,8 @@ public class GridManager : MonoBehaviour
     {
         for(int i = 0; i < ressources.Count; i++)
         {
-            if (!m_cells[position].ressourceProvider.ContainsKey(ressources[i]))
+            if (!m_cells[position].ressourceProvider.ContainsKey(ressources[i]) || m_cells[position].ressourceProvider[ressources[i]].Count == 0)
             { return false; }
-
-            if(m_cells[position].ressourceProvider[ressources[i]].Count == 0)
-                return false;
         }
         return true;
     }
@@ -120,6 +127,22 @@ public class GridManager : MonoBehaviour
     {
         return m_cells[position].type;
     }
+
+    public float GetPercentageOfBatimentDisable()
+    {
+        float disable = 0;
+        float batiment = 0; 
+
+        foreach(Building b in m_buildings)
+        {
+            switch(b.state) 
+            {
+                case EStateBuilding.Work: batiment++; break;
+                case EStateBuilding.Disable: batiment++; disable++; break;
+            }
+        }
+        return disable / batiment;
+    }
 }
 
 public class GridCell
@@ -133,4 +156,9 @@ public class GridCell
         building = null;
         ressourceProvider = new Dictionary<Type, List<IZoneEffect>>();
     } 
+}
+
+public enum EStateBuilding
+{
+    None, Work, Disable
 }
