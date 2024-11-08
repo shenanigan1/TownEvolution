@@ -10,35 +10,19 @@ public class House : BaseBuilding
         neededRessources.Add(typeof(Energy));
         neededRessources.Add(typeof(RoadAccess));
         base.Place(position);
-        if(!consume)
-            building.GetComponent<SpriteRenderer>().color = Color.yellow;
     }
 
     protected override void Effect()
     {
-        RessourcesManager.Instance.RemoveRessources<Gold>(price);
+        if (!GridManager.Instance.IsCaseHaveAccessToRessource(m_gridPosition, neededRessources))
+            return;
+        RessourcesManager.Instance.GetRessources<Energy>().consuption += energyConsumption;
         RessourcesManager.Instance.AddRessources<People>(habitant);
-        if (GridManager.Instance.IsCaseHaveAccessToRessource(m_gridPosition, neededRessources))
-            StartConsume<Energy>();
-
     }
 
     protected override void RemoveEffect()
     {
         RessourcesManager.Instance.RemoveRessources<People>(habitant);
-        RessourcesManager.Instance.GetRessources<Energy>().consuption -= energyConsumption;
-        StopConsume<Energy>();
-    }
-
-    public override void StartConsume<T>()
-    {
-        base.StartConsume<T>();
-        RessourcesManager.Instance.GetRessources<Energy>().consuption += energyConsumption;
-    }
-
-    public override void StopConsume<T>()
-    {
-        base.StopConsume<T>();
         RessourcesManager.Instance.GetRessources<Energy>().consuption -= energyConsumption;
     }
 }

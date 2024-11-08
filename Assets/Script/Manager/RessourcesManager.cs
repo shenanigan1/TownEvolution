@@ -17,24 +17,24 @@ public class RessourcesManager
         this.RegisterRessource(new Water());
         this.RegisterRessource(new Energy());
         this.RegisterRessource(new RoadAccess());
+        this.RegisterRessource(new Impot());
+        this.RegisterRessource(new Happiness());
     }
 
     public void RegisterRessource<T>(T ressource) where T : IRessource
     {
         Type type = typeof(T);
-        if (!m_ressources.ContainsKey(type))
-        {
-            m_ressources[type] = ressource;
-        }
+        if (m_ressources.ContainsKey(type))
+            return;
+        m_ressources[type] = ressource;
     }
 
     public void AddRessources<T>(int amount) where T : IRessource
     {
         Type type = typeof(T);
 
-        if(!m_ressources.ContainsKey(type))
+        if(!IsExisting(type))
         {
-            Debug.Log("Unexisting Ressources Please Save it Before Use it");
             return;
         }
         m_ressources[type].Add(amount);
@@ -44,9 +44,8 @@ public class RessourcesManager
     {
         Type type = typeof(T);
 
-        if (!m_ressources.ContainsKey(type))
+        if (!IsExisting(type))
         {
-            Debug.Log("Unexisting Ressources Please Save it Before Use it");
             return;
         }
         m_ressources[type].Remove(amount);
@@ -56,12 +55,21 @@ public class RessourcesManager
     {
         Type type = typeof(T);
 
-        if (!m_ressources.ContainsKey(type))
+        if (!IsExisting(type))
         {
-            Debug.Log("Unexisting Ressources Please Save it Before Use it");
             return default;
         }
         return (T)m_ressources[type];
+    }
+
+    private bool IsExisting(Type type)
+    {
+        if (!m_ressources.ContainsKey(type))
+        {
+            Debug.Log("Unexisting Ressources Please Save it Before Use it");
+            return false;
+        }
+        return true;
     }
 
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class BuildingPlacementManager : MonoBehaviour
 {
@@ -30,8 +31,14 @@ public class BuildingPlacementManager : MonoBehaviour
     // Update is called once per frame
     public void Update()
     {
-        if (Cursor.lockState == CursorLockMode.Locked)
+        if (Cursor.lockState == CursorLockMode.Locked || EventSystem.current.IsPointerOverGameObject())
+        {
+            if (_preview.activeSelf)
+                _preview.SetActive(false);
             return;
+        }
+        if (!_preview.activeSelf)
+            _preview.SetActive(true);
         if (m_placeBuilding)
         {
             PlaceBuildingOnMousePosOnMap();
@@ -47,17 +54,16 @@ public class BuildingPlacementManager : MonoBehaviour
     {
         Vector2Int? position = GridPositionUtility.GetGridPosition(Input.mousePosition);
 
-        if (position != null)
+        if (position.HasValue)
         {
-            Vector2Int notNullPosition = new Vector2Int(position.Value.x, position.Value.y);
             _preview.transform.position = new Vector3(position.Value.x * 10, 0, position.Value.y * 10);
 
-            if (!IsOccupied(notNullPosition))
+            if (!IsOccupied(position.Value))
                 return;
 
             if (m_rightClic)
             {
-                GridManager.Instance.GetBuilding(new Vector2Int(position.Value.x, position.Value.y)).Destroy();
+                GridManager.Instance.GetBuilding(position.Value).Destroy();
             }
         }
     }
@@ -66,22 +72,21 @@ public class BuildingPlacementManager : MonoBehaviour
     {
         Vector2Int? position = GridPositionUtility.GetGridPosition(Input.mousePosition);
 
-        if (position != null)
+        if (position.HasValue)
         {
-            Vector2Int notNullPosition = new Vector2Int(position.Value.x, position.Value.y);
             _preview.transform.position = new Vector3(position.Value.x * 10, 0, position.Value.y * 10);
 
-            if (!CanPlaceNChangePreviewColor(notNullPosition, m_currentBuilding.price))
+            if (!CanPlaceNChangePreviewColor(position.Value, m_currentBuilding.price))
                  return;
 
             if(m_rightClic)
             {
                 if(m_isbuilding)
                 {
-                    CreateBuilding(notNullPosition);
+                    CreateBuilding(position.Value);
                     return;
                 }
-                PlaceTile(notNullPosition, m_type);
+                PlaceTile(position.Value, m_type);
                     
             }
         }
@@ -150,6 +155,7 @@ public class BuildingPlacementManager : MonoBehaviour
     {
         StopDestructionMode();
         m_type = tile.type;
+        _previewRenderer.sprite = null;
         m_isbuilding = false;
         m_placeBuilding = true;
         m_currentBuilding = tile.building;
