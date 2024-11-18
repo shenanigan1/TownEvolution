@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -159,7 +157,7 @@ public class BuildingPlacementManager : MonoBehaviour
         m_isbuilding = false;
         m_placeBuilding = true;
         m_currentBuilding = tile.building;
-        _preview.SetActive(false);
+        _preview.SetActive(false);    
         ConstructionMenuManager.Instance.InConstructionMode.Invoke(true);
     }
 
@@ -176,6 +174,7 @@ public class BuildingPlacementManager : MonoBehaviour
     {
         StopBuilding();
         m_destroyBuilding = true;
+        _previewRenderer.sprite = null;
         ConstructionMenuManager.Instance.InConstructionMode.Invoke(true);
     }
 

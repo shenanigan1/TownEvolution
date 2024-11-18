@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Gameloop : MonoBehaviour
@@ -11,6 +9,7 @@ public class Gameloop : MonoBehaviour
     [SerializeField] private BuildingPlacementParams m_buildingPlacementParams;
     private BuildingPlacementManager m_buildingPlacementManager;
     private ChunckManager m_chunckManager;
+    private bool isPlaying = false;
 
     private void Awake()
     {
@@ -26,15 +25,17 @@ public class Gameloop : MonoBehaviour
         
     }
 
-    private void Start()
+    public void Init()
     {
         ConstructionMenuManager.Instance.SetPlacementManager(m_buildingPlacementManager);
         m_chunckManager = ChunckManager.Instance;
+        isPlaying = true;
     }
 
     void Update()
     {
-        MouseInputHandler.ProcessMouseInput(m_colorStrategy, ref lastChange, m_chunckManager.GetGridSize, m_selection.GetSelectionTile());
+        if (isPlaying)
+            MouseInputHandler.ProcessMouseInput(m_colorStrategy, ref lastChange, m_chunckManager.GetGridSize, m_selection.GetSelectionTile());
     }
 
     public void SetColorStrategie(SquareColorStrategy strategy)

@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter))]
@@ -36,6 +35,7 @@ public class Chunk : MonoBehaviour
     {
         m_gridSize = ChunckManager.Instance.GetGridSize;
         m_cellSize = ChunckManager.Instance.GetCellSize;
+        m_generationParameter.seed.Set(UnityEngine.Random.Range(0, 1000), UnityEngine.Random.Range(0, 1000));
 
         meshFilter = GetComponent<MeshFilter>();
         InitializeMesh();
