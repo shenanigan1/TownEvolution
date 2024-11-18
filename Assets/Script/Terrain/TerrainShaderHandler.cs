@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using static Chunk;
 
@@ -15,13 +16,21 @@ public class TerrainShaderHandler
     {
         m_colorStrategie = colorStrategie;
         m_generationParameters = parameters;
-        for (int i = 0; i < gridSize-1; i++)
+        ChunckManager.Instance.StartCoroutine(GenerateTerrain(gridSize));
+    }
+
+    public IEnumerator GenerateTerrain(int gridSize)
+    {
+        for (int i = 0; i < gridSize - 1; i++)
         {
-            for(int j = 0; j < gridSize-1; j++)
+            for (int j = 0; j < gridSize - 1; j++)
             {
                 SetTerrain(new Vector2(i, j));
+                if(j%10 == 0)
+                    yield return 0;
             }
         }
+        ChunckManager.Instance.ActivateGame();
     }
     public void SetTerrain(Vector2 position)
     {

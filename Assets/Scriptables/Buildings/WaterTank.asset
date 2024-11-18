@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e00d1b28269dc9438869e2611f43c41, type: 3}
   m_Name: WaterTank
   m_EditorClassIdentifier: 
-  price: 2147483647
+  price: 500
   energyConsumption: 10
   waterConsumption: 0
   buildingPrefab: {fileID: 410840788400333606, guid: 58acb1c2b012ebd429c2643a7522977f, type: 3}

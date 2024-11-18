@@ -1,11 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEditor;
-using UnityEditor.Rendering.Universal.ShaderGraph;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class GridManager : MonoBehaviour
 {
@@ -77,7 +72,7 @@ public class GridManager : MonoBehaviour
                 {
                     Vector2Int pos = new Vector2Int(i, j);
                     SetRessourceOnCell<T>(pos, zone);
-                    Instantiate(test, new Vector3(pos.x*10, 2, pos.y*10), Quaternion.identity, m_cells[position].building.building.gameObject.transform);
+                    //Instantiate(test, new Vector3(pos.x*10, 2, pos.y*10), Quaternion.identity, m_cells[position].building.building.gameObject.transform);
 
                 }
             }
