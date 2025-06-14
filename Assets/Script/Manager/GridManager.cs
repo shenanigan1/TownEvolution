@@ -2,144 +2,215 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Singleton managing the grid, buildings, and resource zones on each cell.
+/// </summary>
 public class GridManager : MonoBehaviour
 {
     public static GridManager Instance;
-    private Dictionary<Vector2Int, GridCell> m_cells = new Dictionary<Vector2Int, GridCell>();
-    private List<Building> m_buildings = new List<Building>();
-    public GameObject test;
+
+    // Dictionary mapping grid coordinates to their cell data
+    private readonly Dictionary<Vector2Int, GridCell> m_cells = new();
+
+    // List of all buildings currently placed on the grid
+    private readonly List<Building> m_buildings = new();
+
+    [SerializeField] private GameObject debugPrefab; // For testing/debugging placement
 
     private void Awake()
     {
+        // Singleton pattern enforcement
         if (Instance == null)
             Instance = this;
         else
             Destroy(this);
     }
 
+    /// <summary>
+    /// Removes a building from the list.
+    /// </summary>
     public void RemoveBuilding(Building building)
     {
         m_buildings.Remove(building);
     }
+
+    /// <summary>
+    /// Assigns a building to a cell at the given position.
+    /// </summary>
     public void SetBuilding(Building building, Vector2Int position)
     {
-        CheckExistance(position);
+        EnsureCellExists(position);
         m_cells[position].building = building;
         m_buildings.Add(building);
     }
 
-    public Building GetBuilding(Vector2Int position) 
+    /// <summary>
+    /// Returns the building at the specified position or null if none exists.
+    /// </summary>
+    public Building GetBuilding(Vector2Int position)
     {
-        return m_cells.ContainsKey(position) ? m_cells[position].building : null;
+        return m_cells.TryGetValue(position, out var cell) ? cell.building : null;
     }
 
-    private void SetRessourceOnCell<T>(Vector2Int position, IZoneEffect zone)where T : IRessource
+    /// <summary>
+    /// Adds a resource provider zone effect to a cell and starts building consumption if applicable.
+    /// </summary>
+    private void SetResourceOnCell<T>(Vector2Int position, IZoneEffect zone) where T : IRessource
     {
-        CheckExistance(position);
+        EnsureCellExists(position);
 
-        if (!m_cells[position].ressourceProvider.ContainsKey(typeof(T)))
-            m_cells[position].ressourceProvider[zone.ressource] = new List<IZoneEffect>();
+        var cell = m_cells[position];
 
-        m_cells[position].ressourceProvider[zone.ressource].Add(zone);
+        // Initialize the list for this resource type if missing
+        if (!cell.ressourceProvider.ContainsKey(typeof(T)))
+            cell.ressourceProvider[typeof(T)] = new List<IZoneEffect>();
 
-        if (m_cells[position].building && !m_cells[position].building.consume && IsCaseHaveAccessToRessource(position, m_cells[position].building.neededRessources))
+        cell.ressourceProvider[typeof(T)].Add(zone);
+
+        // If there's a building that needs resources and currently not consuming, start consumption
+        if (cell.building != null && !cell.building.consume &&
+            IsCellHaveAccessToResource(position, cell.building.neededRessources))
         {
-            m_cells[position].building.StartConsume();
+            cell.building.StartConsume();
         }
     }
 
-
-    private void RemoveRessourceOnCell<T>(Vector2Int position, IZoneEffect zone) where T : IRessource
+    /// <summary>
+    /// Removes a resource provider zone effect from a cell and stops building consumption if necessary.
+    /// </summary>
+    private void RemoveResourceOnCell<T>(Vector2Int position, IZoneEffect zone) where T : IRessource
     {
-        CheckExistance(position);
+        EnsureCellExists(position);
 
-        if (!m_cells[position].ressourceProvider[zone.ressource].Contains(zone))
+        var cell = m_cells[position];
+
+        if (!cell.ressourceProvider.TryGetValue(typeof(T), out var zoneList) || !zoneList.Contains(zone))
             return;
-        m_cells[position].ressourceProvider[zone.ressource].Remove(zone);
-        if (m_cells[position].ressourceProvider[zone.ressource].Count == 0 && m_cells[position].building is Building building)
+
+        zoneList.Remove(zone);
+
+        // If no more providers for this resource and building exists, stop consumption
+        if (zoneList.Count == 0 && cell.building != null)
         {
-            building.StopConsume();
+            cell.building.StopConsume();
         }
     }
 
-    public void SetRessourceProvider<T>(Vector2Int position, IZoneEffect zone)where T : IRessource
+    /// <summary>
+    /// Adds a resource provider zone around a position, affecting cells within effect radius.
+    /// </summary>
+    public void SetResourceProvider<T>(Vector2Int position, IZoneEffect zone) where T : IRessource
     {
-        for(int i = position.x - zone.effectRadius; i <= position.x + zone.effectRadius; i++)
-        {
-            for (int j = position.y - zone.effectRadius; j <= position.y + zone.effectRadius; j++) 
-            {
-                if(j>= 0  && i >= 0 && i < ChunckManager.Instance.GetGridSize && j < ChunckManager.Instance.GetGridSize)
-                {
-                    Vector2Int pos = new Vector2Int(i, j);
-                    SetRessourceOnCell<T>(pos, zone);
-                    //Instantiate(test, new Vector3(pos.x*10, 2, pos.y*10), Quaternion.identity, m_cells[position].building.building.gameObject.transform);
+        int gridSize = ChunckManager.Instance.GetGridSize;
 
+        for (int x = position.x - zone.effectRadius; x <= position.x + zone.effectRadius; x++)
+        {
+            for (int y = position.y - zone.effectRadius; y <= position.y + zone.effectRadius; y++)
+            {
+                if (x >= 0 && y >= 0 && x < gridSize && y < gridSize)
+                {
+                    Vector2Int pos = new(x, y);
+                    SetResourceOnCell<T>(pos, zone);
+
+                    // Uncomment for debug visualization of resource zones
+                    // Instantiate(debugPrefab, new Vector3(pos.x * 10, 2, pos.y * 10), Quaternion.identity, m_cells[position].building.building.gameObject.transform);
                 }
             }
         }
     }
 
-    public void RemoveRessourceProvider<T>(Vector2Int position, IZoneEffect zone) where T : IRessource
+    /// <summary>
+    /// Removes a resource provider zone around a position.
+    /// </summary>
+    public void RemoveResourceProvider<T>(Vector2Int position, IZoneEffect zone) where T : IRessource
     {
-        for (int i = position.x - zone.effectRadius; i <= position.x + zone.effectRadius; i++)
+        int gridSize = ChunckManager.Instance.GetGridSize;
+
+        for (int x = position.x - zone.effectRadius; x <= position.x + zone.effectRadius; x++)
         {
-            for (int j = position.y - zone.effectRadius; j <= position.y + zone.effectRadius; j++)
+            for (int y = position.y - zone.effectRadius; y <= position.y + zone.effectRadius; y++)
             {
-                if (j >= 0 && i >= 0 && i < ChunckManager.Instance.GetGridSize && j < ChunckManager.Instance.GetGridSize)
+                if (x >= 0 && y >= 0 && x < gridSize && y < gridSize)
                 {
-                    Vector2Int pos = new Vector2Int(i, j);
-                    RemoveRessourceOnCell<T>(pos, zone);
+                    Vector2Int pos = new(x, y);
+                    RemoveResourceOnCell<T>(pos, zone);
                 }
             }
         }
     }
 
-    private void CheckExistance(Vector2Int position)
+    /// <summary>
+    /// Checks if a cell exists at the position, creates one if missing.
+    /// </summary>
+    private void EnsureCellExists(Vector2Int position)
     {
-        if(m_cells.ContainsKey(position))
-        { return; }
-
-        m_cells[position] = new GridCell();
+        if (!m_cells.ContainsKey(position))
+            m_cells[position] = new GridCell();
     }
 
-    public bool IsCaseHaveAccessToRessource(Vector2Int position, List<Type> ressources)
+    /// <summary>
+    /// Checks if the cell has access to all required resources.
+    /// </summary>
+    public bool IsCellHaveAccessToResource(Vector2Int position, List<Type> requiredResources)
     {
-        for(int i = 0; i < ressources.Count; i++)
+        if (!m_cells.ContainsKey(position))
+            return false;
+
+        var cell = m_cells[position];
+        foreach (var resourceType in requiredResources)
         {
-            if (!m_cells[position].ressourceProvider.ContainsKey(ressources[i]) || m_cells[position].ressourceProvider[ressources[i]].Count == 0)
-            { return false; }
+            if (!cell.ressourceProvider.TryGetValue(resourceType, out var providers) || providers.Count == 0)
+                return false;
         }
         return true;
     }
 
+    /// <summary>
+    /// Sets the tile type at a position, creating cell if needed.
+    /// </summary>
     public void SetTile(Vector2Int position, int type)
     {
-        CheckExistance(position);
+        EnsureCellExists(position);
         m_cells[position].type = type;
     }
 
-    public int GetTileType(Vector2Int position) 
+    /// <summary>
+    /// Returns the tile type at a given position.
+    /// </summary>
+    public int GetTileType(Vector2Int position)
     {
-        return m_cells[position].type;
+        return m_cells.TryGetValue(position, out var cell) ? cell.type : -1;
     }
 
-    public float GetPercentageOfBatimentDisable()
+    /// <summary>
+    /// Returns the ratio of disabled buildings over total buildings.
+    /// </summary>
+    public float GetPercentageOfBuildingDisabled()
     {
-        float disable = 0;
-        float batiment = 0; 
+        int totalBuildings = 0;
+        int disabledCount = 0;
 
-        foreach(Building b in m_buildings)
+        foreach (var building in m_buildings)
         {
-            switch(b.state) 
+            switch (building.state)
             {
-                case EStateBuilding.Work: batiment++; break;
-                case EStateBuilding.Disable: batiment++; disable++; break;
+                case EStateBuilding.Work:
+                    totalBuildings++;
+                    break;
+                case EStateBuilding.Disable:
+                    totalBuildings++;
+                    disabledCount++;
+                    break;
             }
         }
-        return disable / batiment;
+
+        return totalBuildings == 0 ? 0f : (float)disabledCount / totalBuildings;
     }
 }
 
+/// <summary>
+/// Represents a single cell in the grid.
+/// </summary>
 public class GridCell
 {
     public int type;
@@ -150,10 +221,15 @@ public class GridCell
     {
         building = null;
         ressourceProvider = new Dictionary<Type, List<IZoneEffect>>();
-    } 
+    }
 }
 
+/// <summary>
+/// Possible states of a building.
+/// </summary>
 public enum EStateBuilding
 {
-    None, Work, Disable
+    None,
+    Work,
+    Disable
 }

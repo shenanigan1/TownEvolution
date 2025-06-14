@@ -1,20 +1,47 @@
 using UnityEngine;
 
+/// <summary>
+/// Handles random placement of objects within a grid.
+/// </summary>
 public class ObjectPlacement : MonoBehaviour
 {
-    public GameObject _spawnObject;
-    public Transform _parent;
+    [Tooltip("Prefab to spawn randomly on the grid.")]
+    [SerializeField] private GameObject spawnObject;
 
+    [Tooltip("Parent transform to hold spawned objects.")]
+    [SerializeField] private Transform parent;
 
-    public void PlaceObject(int gridSize, float cellDiff)
+    /// <summary>
+    /// Instantiates objects randomly on a grid based on grid size and cell spacing.
+    /// </summary>
+    /// <param name="gridSize">Number of cells along one axis of the grid.</param>
+    /// <param name="cellSize">Size of each cell (distance between grid points).</param>
+    public void PlaceObjects(int gridSize, float cellSize)
     {
-        for (int i = 0; i < gridSize - 1; i++)
+        if (spawnObject == null)
         {
-            for (int j = 0; j < gridSize - 1; j++)
+            Debug.LogWarning("SpawnObject prefab is not assigned.");
+            return;
+        }
+
+        for (int x = 0; x < gridSize - 1; x++)
+        {
+            for (int y = 0; y < gridSize - 1; y++)
             {
-                if (Random.Range(0, 100) > 50)
-                    continue;
-                GameObject go = Instantiate<GameObject>(_spawnObject, new Vector3(i * cellDiff +Random.Range(0, cellDiff),0, j * cellDiff + Random.Range(0, cellDiff)), Quaternion.identity, _parent);
+                // 50% chance to spawn object at this cell
+                if (Random.Range(0, 100) <= 50)
+                {
+                    float randomOffsetX = Random.Range(0f, cellSize);
+                    float randomOffsetZ = Random.Range(0f, cellSize);
+
+                    Vector3 spawnPosition = new Vector3(
+                        x * cellSize + randomOffsetX,
+                        0f,
+                        y * cellSize + randomOffsetZ
+                    );
+
+                    Instantiate(spawnObject, spawnPosition, Quaternion.identity, parent);
+                }
             }
         }
     }

@@ -2,39 +2,55 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+/// <summary>
+/// Handles asynchronous loading of scenes additively with controlled activation.
+/// </summary>
 public class LoadScene : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    /// <summary>
+    /// Automatically load "SampleScene" at start.
+    /// </summary>
+    private void Start()
     {
         Load("SampleScene");
     }
 
+    /// <summary>
+    /// Starts asynchronous loading of a scene by name.
+    /// </summary>
+    /// <param name="sceneName">Name of the scene to load additively.</param>
     public void Load(string sceneName)
     {
         StartCoroutine(LoadSceneAsync(sceneName));
     }
 
+    /// <summary>
+    /// Coroutine that loads the scene asynchronously and activates it once ready.
+    /// </summary>
+    /// <param name="sceneName">Name of the scene to load.</param>
+    /// <returns>IEnumerator for coroutine.</returns>
     private IEnumerator LoadSceneAsync(string sceneName)
     {
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
-        asyncLoad.allowSceneActivation = false;
-        // Optional: Prevents the scene from activating immediately
+
+        // Prevent automatic scene activation until fully loaded.
         asyncLoad.allowSceneActivation = false;
 
-        // Progressively load the scene
+        // While the asynchronous load is still in progress...
         while (!asyncLoad.isDone)
         {
-            Debug.Log($"Loading progress: {asyncLoad.progress * 100}%");
+            // Report progress (progress goes from 0 to 0.9 before activation is allowed)
+            Debug.Log($"Loading progress: {asyncLoad.progress * 100:F1}%");
 
-            // If loading is almost done, activate the scene
+            // When loading is essentially complete (90%), activate the scene.
             if (asyncLoad.progress >= 0.9f)
             {
                 Debug.Log("Scene loaded, activating...");
                 asyncLoad.allowSceneActivation = true;
             }
 
-            yield return null; // Yield to the next frame
+            // Wait for the next frame before continuing the loop.
+            yield return null;
         }
     }
 }

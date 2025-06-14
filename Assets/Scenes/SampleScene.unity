@@ -861,7 +861,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb1f05e4c5914974cbcdc2aa1b40fb72, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  test: {fileID: 0}
+  debugPrefab: {fileID: 0}
 --- !u!114 &127763003
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3510,7 +3510,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1104005528}
-  m_Mesh: {fileID: 0}
+  m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!64 &1104005535
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -3545,8 +3545,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a144e873448b0348bbcb8bfb20f65aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _spawnObject: {fileID: 8101006888860484118, guid: e4b78c949212d8a49bca0fdb4de15a58, type: 3}
-  _parent: {fileID: 692924479}
+  spawnObject: {fileID: 1104005528}
+  parent: {fileID: 692924479}
 --- !u!114 &1104005537
 MonoBehaviour:
   m_ObjectHideFlags: 0
