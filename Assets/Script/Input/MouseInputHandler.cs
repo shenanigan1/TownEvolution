@@ -1,51 +1,75 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-// Class For the handle of mouse input
+/// <summary>
+/// Static class responsible for handling mouse input related to grid tile color changes.
+/// </summary>
 public static class MouseInputHandler
 {
-    public static void ProcessMouseInput(SquareColorStrategy m_colorStrategy, ref Vector2Int lastChange, int gridSize, ECaseType type)
+    /// <summary>
+    /// Processes mouse input to update the color of a grid tile based on the mouse position.
+    /// </summary>
+    /// <param name="colorStrategy">Strategy used to change tile colors.</param>
+    /// <param name="lastChange">Reference to the last changed tile position.</param>
+    /// <param name="gridSize">Size of the grid.</param>
+    /// <param name="type">The type of tile to apply.</param>
+    public static void ProcessMouseInput(SquareColorStrategy colorStrategy, ref Vector2Int lastChange, int gridSize, ECaseType type)
     {
-        Vector2Int? position = GridPositionUtility.GetGridPosition(Input.mousePosition);
-        
+        Vector2Int? mouseGridPos = GridPositionUtility.GetGridPosition(Input.mousePosition);
 
-        if (Cursor.lockState == CursorLockMode.Locked || position == null || EventSystem.current.IsPointerOverGameObject())
+        // Early exit if cursor locked, pointer over UI, or invalid position
+        if (Cursor.lockState == CursorLockMode.Locked || mouseGridPos == null || EventSystem.current.IsPointerOverGameObject())
         {
-            ResetLastChange(m_colorStrategy, ref lastChange);
+            ResetLastChange(colorStrategy, ref lastChange);
             lastChange.Set(-1, -1);
             return;
         }
 
-        if(!HaveChangePosition(m_colorStrategy, lastChange, position))
-        {
+        if (!HasPositionChanged(colorStrategy, lastChange, mouseGridPos.Value))
             return;
-        }
 
-        ResetLastChange(m_colorStrategy, ref lastChange);
-        position = new Vector2Int(position.Value.y, position.Value.x);
-        lastChange.Set(position.Value.x, position.Value.y);
-        m_colorStrategy.ChangeColor(position.Value.x, position.Value.y, (int)type);
+        // Reset color of previously changed tile before updating new one
+        ResetLastChange(colorStrategy, ref lastChange);
+
+        // Switch x and y because the strategy uses (row, column) indexing or vice versa
+        Vector2Int newPos = new Vector2Int(mouseGridPos.Value.y, mouseGridPos.Value.x);
+
+        lastChange.Set(newPos.x, newPos.y);
+        colorStrategy.ChangeColor(newPos.x, newPos.y, (int)type);
     }
 
-    private static bool HaveChangePosition(SquareColorStrategy m_colorStrategy, Vector2Int lastChange, Vector2Int? position)
+    /// <summary>
+    /// Checks if the mouse position differs from the last changed tile.
+    /// </summary>
+    private static bool HasPositionChanged(SquareColorStrategy colorStrategy, Vector2Int lastChange, Vector2Int currentPos)
     {
-        if (IsValidSquareIndex(position.Value.x, position.Value.y, m_colorStrategy))
+        if (IsValidSquareIndex(currentPos.x, currentPos.y, colorStrategy))
         {
-            if (lastChange.x != position.Value.y || lastChange.y != position.Value.x)
+            // Compare with flipped coordinates based on usage pattern
+            if (lastChange.x != currentPos.y || lastChange.y != currentPos.x)
                 return true;
         }
         return false;
     }
 
-    private static void ResetLastChange(ISquareColorStrategy m_colorStrategy, ref Vector2Int lastChange)
+    /// <summary>
+    /// Resets the color of the last changed tile to its original state.
+    /// </summary>
+    private static void ResetLastChange(SquareColorStrategy colorStrategy, ref Vector2Int lastChange)
     {
         if (lastChange.x < 0)
             return;
 
-        m_colorStrategy.ChangeColor(lastChange.x, lastChange.y, GridManager.Instance.GetTileType(new Vector2Int(lastChange.x, lastChange.y)));
+        // Restore original tile color using GridManager's tile type
+        int originalTileType = GridManager.Instance.GetTileType(new Vector2Int(lastChange.x, lastChange.y));
+        colorStrategy.ChangeColor(lastChange.x, lastChange.y, originalTileType);
     }
-    private static bool IsValidSquareIndex(int x, int y, ISquareColorStrategy m_colorStrategy)
+
+    /// <summary>
+    /// Checks if the given grid indices are within the valid grid range.
+    /// </summary>
+    private static bool IsValidSquareIndex(int x, int y, SquareColorStrategy colorStrategy)
     {
-        return x >= 0 && x < m_colorStrategy.GridSize && y >= 0 && y < m_colorStrategy.GridSize;
+        return x >= 0 && x < colorStrategy.GridSize && y >= 0 && y < colorStrategy.GridSize;
     }
 }
